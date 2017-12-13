@@ -1,0 +1,25 @@
+body {
+  font-family: sans-serif;
+}
+
+.container {
+  display: flex;
+  flex-direction: row;
+  align-items: space-between;
+}
+
+.sidebar {
+  /* width: 20%; */
+}
+
+input.username {
+  border: 1px solid white;
+  font-family: sans-serif;
+  font-size: 1em;
+  padding: 0;
+  width: auto;
+}
+
+input.username:hover {
+  border: 1px solid rgba(0, 0, 0, 0.2);
+}
