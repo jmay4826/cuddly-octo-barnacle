@@ -3,6 +3,7 @@ import openSocket from "socket.io-client";
 import Password from "../password";
 import Dashboard from "../dashboard";
 import "../../App.css";
+import axios from "axios";
 
 const socket = openSocket();
 
@@ -32,6 +33,7 @@ class Classroom extends Component {
   handleJoin() {
     socket.emit("checkPassword", this.state);
   }
+
   render() {
     return (
       <div>
