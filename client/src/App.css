@@ -1,0 +1,122 @@
+:root {
+  --gray: #f2efea;
+  --blue: #66d7d1;
+  --black: #403d58;
+  --orange: #e08e45;
+  --yellow: #dbd56e;
+}
+
+body,
+html {
+  margin: 0;
+  padding: 0;
+  background-color: var(--black);
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  color: var(--gray);
+}
+
+h2 {
+  text-transform: uppercase;
+  font-size: 2em;
+}
+
+h3,
+h4 {
+  padding: 0;
+  margin: 0;
+  font-size: 1.5em;
+}
+
+.enter-classroom-container {
+  display: flex;
+  flex-direction: column;
+  margin: auto;
+  height: 70vh;
+  justify-content: space-around;
+  align-items: center;
+}
+
+input {
+  border: 5px dashed var(--orange);
+
+  background: rgba(255, 255, 255, 0.8);
+  /* background-color: var(--gray); */
+  min-width: 30vw;
+  min-height: 7vh;
+  font-size: 24px;
+  text-align: center;
+  color: black;
+  outline: none;
+}
+
+button {
+  background-color: rgba(255, 255, 255, 0.8);
+  border-radius: 3px;
+  box-shadow: 2px 2px 2px;
+  font-size: 24px;
+}
+
+.students-list {
+  margin: 0;
+  padding: 0;
+}
+
+.student-container {
+  text-transform: uppercase;
+  list-style: none;
+  margin: 10px;
+  display: flex;
+  flex-direction: column;
+  border-bottom: 1px solid white;
+}
+
+.student-status {
+  height: 1.5em;
+  width: 1.5em;
+  border: 1px dashed white;
+  border-radius: 50%;
+  margin: 5px;
+  opacity: 0.2;
+  transition: opacity 300ms;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.raised-hand {
+  opacity: 0.2;
+  font-size: 1.5em;
+  transition: opacity 300ms;
+}
+
+.editable:hover {
+  opacity: 0.4;
+}
+
+.student-status-good {
+  background: green;
+}
+.student-status-ok {
+  background: yellow;
+}
+.student-status-bad {
+  background: red;
+}
+.student-status-none {
+  border: 1px dashed white;
+}
+
+.student-status-active,
+.student-status-active:hover {
+  opacity: 1;
+}
+
+.status-bar {
+  display: flex;
+  flex-direction: row;
+}
+
+.student-name {
+  background: none;
+  border-bottom: 1px solid white;
+}
