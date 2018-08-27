@@ -1,118 +1,127 @@
 require("dotenv").config();
+const { promisify } = require("util");
 const app = require("express")();
 const http = require("http").Server(app);
 const io = require("socket.io")(http);
-const massive = require("massive");
+const redis = require("redis");
+const client = redis.createClient();
+const hgetallAsync = promisify(client.hgetall).bind(client);
+const lrangeAsync = promisify(client.lrange).bind(client);
+const hmsetAsync = promisify(client.hmset).bind(client);
+const rpushAsync = promisify(client.rpush).bind(client);
+const hgetAsync = promisify(client.hget).bind(client);
+const sremAsync = promisify(client.srem).bind(client);
+const saddAsync = promisify(client.sadd).bind(client);
+const smembersAsync = promisify(client.smembers).bind(client);
 
-massive({
-  host: process.env.DB_HOST,
-  port: process.env.DB_PORT,
-  database: process.env.DB_DATABASE,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD
-}).then(db => app.set("db", db));
-
-app.get("/", (req, res) => {
-  res.send("<h1>Hello</h1>");
-});
-
-let users = [];
-let classrooms = [];
+let classrooms = {};
 let questions = [];
-let position = {};
+
+const objToArr = obj => {
+  const result = [];
+  for (let key in obj) {
+    result.push(key, obj[key]);
+  }
+  console.log(result);
+  return result;
+};
+
+const isNumeric = value => !isNaN(value - parseFloat(value));
+
+const convertDataTypes = async obj => {
+  console.log(await obj);
+  const converted = { ...(await obj) };
+  for (let key in converted) {
+    if (isNumeric(converted[key])) {
+      converted[key] = +converted[key];
+    } else if (converted[key] === "false") {
+      converted[key] = false;
+    } else if (converted[key] === "true") {
+      converted[key] = true;
+    }
+  }
+  // console.log(converted);
+  return converted;
+};
+
+const getAllUsersByClassroom = classroom => {
+  console.log(classroom);
+  return smembersAsync(classroom).then(async users => {
+    console.log(await users);
+    return Promise.all(
+      users.map(async user => hgetallAsync(user)).map(convertDataTypes)
+    );
+  });
+};
 
 io.on("connection", socket => {
-  let currentClassroom = {};
-  let currentUser = {
-    name: "Guest" + Math.floor(Math.random() * 1000000),
-    id: socket.id
-  };
-  socket.emit("position", position);
-
-  socket.on("newClassroom", classroom => {
-    let teacherPassword = Math.floor(Math.random() * 100000);
-    let studentPassword = Math.floor(Math.random() * 100000);
-    classrooms.push({
-      id: classroom,
-      studentPassword,
-      teacherPassword,
-      users: []
-    });
-    socket.emit("passwords", {
-      classroom,
-      studentPassword,
-      teacherPassword
-    });
+  socket.on("join classroom", user => {
+    socket.join(user.classroom);
+    hmsetAsync(socket.id, objToArr(user)).catch(console.log);
+    saddAsync(user.classroom, socket.id)
+      .then(_ => getAllUsersByClassroom(user.classroom))
+      .then(users => {
+        io.to(user.classroom).emit("new user", users);
+      });
   });
 
-  socket.on("checkPassword", data => {
-    console.log(data);
-    currentClassroom =
-      classrooms.find(classroom => classroom.id == data.classroom) || {};
-    console.log(classrooms);
-    if (!currentClassroom.id) {
-      return socket.emit(
-        "authError",
-        "Classroom ID not found. Please try again."
-      );
-    }
-    if (data.password == currentClassroom.teacherPassword) {
-      socket.emit("authenticated", { authenticated: true, isAdmin: true });
-      socket.join(currentClassroom);
-      socket.join(`${currentClassroom}-admin`);
-      currentClassroom.users = [...currentClassroom.users, currentUser];
-      socket.to(currentClassroom).emit("userList", currentClassroom.users);
-      socket.emit("userList", currentClassroom.users);
-    } else if (data.password == currentClassroom.studentPassword) {
-      socket.emit("authenticated", { authenticated: true });
-      socket.join(currentClassroom);
-      currentClassroom.users = [...currentClassroom.users, currentUser];
-      socket.to(currentClassroom).emit("userList", currentClassroom.users);
-      socket.emit("userList", currentClassroom.users);
-    } else {
-      socket.emit("authError", "Password did not match. Please try again.");
-    }
+  socket.on("disconnect", async reason => {
+    let classroom = await hgetAsync(socket.id, "classroom");
+
+    client.del(socket.id, console.log);
+    sremAsync(classroom, 0, socket.id)
+      .then(result => getAllUsersByClassroom(classroom))
+      .then(users => io.to(classroom).emit("new user", users))
+      .catch(console.log);
   });
 
-  socket.on("editUsername", username => {
-    currentClassroom.users.find(
-      user => currentUser.id === user.id
-    ).name = username;
-    socket.emit("userList", currentClassroom.users);
-    socket.broadcast.emit("userList", currentClassroom.users);
+  socket.on("update user", user => {
+    hmsetAsync(user.id, objToArr(user))
+      .then(result => {
+        console.log(result);
+        return getAllUsersByClassroom(user.classroom);
+      })
+      .then(users => {
+        if (user.id === socket.id) {
+          socket.emit("update user", user);
+        }
+        io.to(user.classroom).emit("new user", users);
+      })
+      .catch(console.log);
   });
-  socket.on("raiseHand", () =>
-    socket.to(`${currentClassroom}-admin`).emit("raisedHand")
-  );
-  socket.on("moved", newPosition => (position = newPosition));
-  socket.on("disconnect", reason => {
-    if (!currentClassroom.users) return;
-    currentClassroom.users.splice(
-      currentClassroom.users.findIndex(user => currentUser.id === user.id),
-      1
-    );
-    console.log(users);
-    socket.broadcast.emit("userList", currentClassroom.users);
-  });
+
+  // socket.on("join classroom instructor", ({ classroom, name }) => {
+  //   room = classroom;
+  //   classrooms[room] = classrooms[room] || { users: [], instructors: [] };
+  //   socket.join(room);
+  //   classrooms[room].instructors = [
+  //     ...classrooms[room].instructors,
+  //     { id: socket.id, name }
+  //   ];
+  //   io.to(room).emit("new instructor", classrooms[room].instructors);
+  // });
+
+  // socket.on("editUsername", username => {
+  //   currentClassroom.users.find(
+  //     user => currentUser.id === user.id
+  //   ).name = username;
+  //   socket.emit("userList", currentClassroom.users);
+  //   socket.broadcast.emit("userList", currentClassroom.users);
+  // });
+  // socket.on("raiseHand", () =>
+  //   socket.to(`${currentClassroom}-admin`).emit("raisedHand")
+  // );
+  // socket.on("moved", newPosition => (position = newPosition));
+  // socket.on("disconnect", reason => {
+  //   if (!currentClassroom.users) return;
+  //   currentClassroom.users.splice(
+  //     currentClassroom.users.findIndex(user => currentUser.id === user.id),
+  //     1
+  //   );
+  //   console.log(users);
+  //   socket.broadcast.emit("userList", currentClassroom.users);
+  // });
 });
-
-// users.push(currentUser);
-
-// socket.emit("user list", users);
-// socket.broadcast.emit("user list", users);
-
-// socket.on("makeAdmin", user => {
-//   console.log("admin");
-//   socket.join("admin");
-// });
-
-// socket.on("question", question => {
-//   questions.push(question);
-//   socket.emit("question added", question);
-//   socket.to("admin").emit("question added", questions);
-// });
-
-// socket.on('editName', username => () )
 
 http.listen(3001, () => {
   console.log("listening on 3000");
