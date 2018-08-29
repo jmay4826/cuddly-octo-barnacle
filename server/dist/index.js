@@ -19,7 +19,7 @@ const sremAsync = util_1.promisify(client.srem).bind(client);
 const saddAsync = util_1.promisify(client.sadd).bind(client);
 const smembersAsync = util_1.promisify(client.smembers).bind(client);
 flushallAsync();
-const isNumeric = value => !isNaN(value - parseFloat(value));
+const isNumeric = (value) => !isNaN(value - parseFloat(value));
 const convertDataTypes = async (input) => {
     const obj = await input;
     const converted = Object.keys(obj).reduce(async (acc, key) => {
@@ -41,16 +41,16 @@ const convertDataTypes = async (input) => {
 };
 const getAllUsersByClassroom = (classroom) => smembersAsync(classroom).then(async (users) => Promise.all(users.map(async (user) => hgetallAsync(user)).map(convertDataTypes)));
 io.on("connection", socket => {
-    socket.on("join classroom", user => {
-        socket.join(user.classroom);
-        // if (user.instructor) {
-        //   socket.join(user.classroom + "-instructors");
-        // }
+    socket.on("join classroom", (user) => {
+        socket.join(user.classroom.toString());
+        if (user.instructor) {
+            socket.join(user.classroom + "-instructors");
+        }
         hmsetAsync(socket.id, user).catch(console.log);
         saddAsync(user.classroom, socket.id)
             .then(_ => getAllUsersByClassroom(user.classroom))
             .then(users => {
-            io.to(user.classroom).emit("new user", users);
+            io.to(user.classroom.toString()).emit("new user", users);
         });
     });
     socket.on("disconnect", async (reason) => {

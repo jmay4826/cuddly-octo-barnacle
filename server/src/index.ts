@@ -10,6 +10,15 @@ const http = new Server(app);
 const io = socketIO(http);
 const client = redis.createClient();
 
+interface IStudent {
+  status: string;
+  classroom: string | number;
+  id: string;
+  instructor: boolean;
+  name: string;
+  raisedHand: boolean;
+}
+
 const flushallAsync = promisify(client.flushall).bind(client) as () => Promise<
   string
 >;
@@ -29,16 +38,16 @@ const sremAsync = promisify(client.srem).bind(client) as (
   ...values: string[]
 ) => Promise<number>;
 const saddAsync = promisify(client.sadd).bind(client) as (
-  key: string,
+  key: string | number,
   ...members: string[]
 ) => Promise<number>;
 const smembersAsync = promisify(client.smembers).bind(client) as (
-  key: string
+  key: string | number
 ) => Promise<string[]>;
 
 flushallAsync();
 
-const isNumeric = value => !isNaN(value - parseFloat(value));
+const isNumeric = (value: any) => !isNaN(value - parseFloat(value));
 
 const convertDataTypes = async (input: object) => {
   const obj = await input;
@@ -59,24 +68,25 @@ const convertDataTypes = async (input: object) => {
   return converted;
 };
 
-const getAllUsersByClassroom = (classroom: string) =>
-  smembersAsync(classroom).then(async (users: string[]) =>
-    Promise.all(
-      users.map(async user => hgetallAsync(user)).map(convertDataTypes)
-    )
+const getAllUsersByClassroom = (classroom: string | number) =>
+  smembersAsync(classroom).then(
+    async (users: string[]) =>
+      Promise.all(
+        users.map(async user => hgetallAsync(user)).map(convertDataTypes)
+      ) as Promise<IStudent[]>
   );
 
 io.on("connection", socket => {
-  socket.on("join classroom", user => {
-    socket.join(user.classroom);
-    // if (user.instructor) {
-    //   socket.join(user.classroom + "-instructors");
-    // }
+  socket.on("join classroom", (user: IStudent) => {
+    socket.join(user.classroom.toString());
+    if (user.instructor) {
+      socket.join(user.classroom + "-instructors");
+    }
     hmsetAsync(socket.id, user).catch(console.log);
     saddAsync(user.classroom, socket.id)
       .then(_ => getAllUsersByClassroom(user.classroom))
       .then(users => {
-        io.to(user.classroom).emit("new user", users);
+        io.to(user.classroom.toString()).emit("new user", users);
       });
   });
 
