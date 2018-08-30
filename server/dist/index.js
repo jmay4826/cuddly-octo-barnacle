@@ -62,9 +62,6 @@ io.on("connection", socket => {
         hmsetAsync(user.id, user)
             .then(_ => getAllUsersByClassroom(user.classroom))
             .then(users => {
-            if (user.id === socket.id) {
-                socket.emit("update user", user);
-            }
             io.to(user.classroom).emit("new user", filterUsers(users));
         })
             .catch(console.log);

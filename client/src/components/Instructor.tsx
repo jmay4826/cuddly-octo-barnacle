@@ -9,13 +9,14 @@ interface IProps extends RouteComponentProps<{ id: string }> {}
 
 interface IState {
   students: IUser[];
+  instructors: IUser[];
 }
 
 class Instructor extends Component<IProps, IState> {
   public socket: SocketIOClient.Socket;
   constructor(props: IProps) {
     super(props);
-    this.state = { students: [] };
+    this.state = { students: [], instructors: [] };
   }
   public componentDidMount() {
     this.socket = io();
@@ -34,9 +35,9 @@ class Instructor extends Component<IProps, IState> {
         instructors
       }: {
         students: IUser[];
-        instructors: object[];
+        instructors: IUser[];
       }) => {
-        this.setState({ students });
+        this.setState({ students, instructors });
       }
     );
   }

@@ -14,8 +14,9 @@ interface IProps
 
 interface IState {
   showPoll: boolean;
-  students: IUser[];
+  otherStudents: IUser[];
   instructors: IUser[];
+  student: IUser;
 }
 
 class Classroom extends Component<IProps, IState> {
@@ -25,24 +26,36 @@ class Classroom extends Component<IProps, IState> {
     super(props);
     this.state = {
       instructors: [],
+      otherStudents: [],
       showPoll: true,
-      students: []
+      student: {
+        classroom: "",
+        id: "",
+        instructor: false,
+        name: "",
+        raisedHand: false,
+        status: ""
+      }
     };
   }
   public componentDidMount() {
     this.socket = io();
     this.socket.on("connect", () => {
-      this.student = {
-        classroom: this.props.match.params.id.toUpperCase(),
-        id: this.socket.id,
-        instructor: false,
-        name: this.props.location.state
-          ? this.props.location.state.name || "Guest"
-          : "Guest",
-        raisedHand: false,
-        status: ""
-      };
-      this.socket.emit("join classroom", this.student);
+      this.setState(
+        {
+          student: {
+            classroom: this.props.match.params.id.toUpperCase(),
+            id: this.socket.id,
+            instructor: false,
+            name: this.props.location.state
+              ? this.props.location.state.name || "Guest"
+              : "Guest",
+            raisedHand: false,
+            status: ""
+          }
+        },
+        () => this.socket.emit("join classroom", this.state.student)
+      );
     });
 
     this.socket.on(
@@ -54,13 +67,15 @@ class Classroom extends Component<IProps, IState> {
         students: IUser[];
         instructors: IUser[];
       }) => {
-        console.log(instructors);
-        this.setState({ students, instructors });
+        const student = students.find(({ id }) => id === this.socket.id);
+        const otherStudents = students.filter(
+          ({ id }) => id !== this.socket.id
+        );
+        if (student) {
+          this.setState({ otherStudents, instructors, student });
+        }
       }
     );
-    this.socket.on("update user", (student: IUser) => {
-      this.student = student;
-    });
   }
   public render() {
     return (
@@ -68,15 +83,15 @@ class Classroom extends Component<IProps, IState> {
         <h2>Classroom {this.props.match.params.id}</h2>
         <Video />
         <Poll />
-        {this.student && (
+        {this.state.student.id && (
           <Student
             editable={true}
-            student={this.student}
+            student={this.state.student}
             socket={this.socket}
           />
         )}
         <Instructors instructors={this.state.instructors} />
-        <Students students={this.state.students} socket={this.socket} />
+        <Students students={this.state.otherStudents} socket={this.socket} />
       </div>
     );
   }
