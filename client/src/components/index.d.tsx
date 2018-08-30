@@ -1,4 +1,4 @@
-interface IStudent {
+interface IUser {
   status: string;
   classroom: string | number;
   id: string;

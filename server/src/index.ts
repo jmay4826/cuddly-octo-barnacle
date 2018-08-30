@@ -10,7 +10,7 @@ const http = new Server(app);
 const io = socketIO(http);
 const client = redis.createClient();
 
-interface IStudent {
+interface IUser {
   status: string;
   classroom: string;
   id: string;
@@ -47,6 +47,12 @@ const smembersAsync = promisify(client.smembers).bind(client) as (
 
 flushallAsync();
 
+const filterUsers = (users: IUser[]) => {
+  const students = users.filter(({ instructor }) => !instructor);
+  const instructors = users.filter(({ instructor }) => instructor);
+  return { students, instructors };
+};
+
 const convertBooleans = async (input: Promise<{}>) => {
   const obj = await input;
 
@@ -59,8 +65,6 @@ const convertBooleans = async (input: Promise<{}>) => {
       }
     }
   }
-
-  console.log(obj);
   return obj;
 };
 
@@ -69,11 +73,11 @@ const getAllUsersByClassroom = (classroom: string) =>
     async (users: string[]) =>
       Promise.all(
         users.map(async user => hgetallAsync(user)).map(convertBooleans)
-      ) as Promise<IStudent[]>
+      ) as Promise<IUser[]>
   );
 
 io.on("connection", socket => {
-  socket.on("join classroom", (user: IStudent) => {
+  socket.on("join classroom", (user: IUser) => {
     socket.join(user.classroom.toString());
     if (user.instructor) {
       socket.join(user.classroom + "-instructors");
@@ -81,9 +85,9 @@ io.on("connection", socket => {
     hmsetAsync(socket.id, user).catch(console.log);
     saddAsync(user.classroom, socket.id)
       .then(_ => getAllUsersByClassroom(user.classroom))
-      .then(users => {
-        io.to(user.classroom.toString()).emit("new user", users);
-      });
+      .then(users =>
+        io.to(user.classroom.toString()).emit("new user", filterUsers(users))
+      );
   });
 
   socket.on("disconnect", async reason => {
@@ -92,23 +96,23 @@ io.on("connection", socket => {
     client.del(socket.id, console.log);
     sremAsync(classroom, socket.id)
       .then(result => getAllUsersByClassroom(classroom))
-      .then(users => io.to(classroom).emit("new user", users))
+      .then(users => io.to(classroom).emit("new user", filterUsers(users)))
       .catch(console.log);
   });
 
   socket.on("update user", user => {
     hmsetAsync(user.id, user)
-      .then(result => getAllUsersByClassroom(user.classroom))
+      .then(_ => getAllUsersByClassroom(user.classroom))
       .then(users => {
         if (user.id === socket.id) {
           socket.emit("update user", user);
         }
-        io.to(user.classroom).emit("new user", users);
+        io.to(user.classroom).emit("new user", filterUsers(users));
       })
       .catch(console.log);
   });
 });
 
 http.listen(3001, () => {
-  console.log("listening on 3000");
+  console.log("listening on 3001");
 });

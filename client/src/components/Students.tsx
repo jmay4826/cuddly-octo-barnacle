@@ -5,7 +5,7 @@ const Students = ({
   students,
   socket
 }: {
-  students: IStudent[];
+  students: IUser[];
   socket: SocketIOClientStatic["Socket"];
 }) => (
   <div>

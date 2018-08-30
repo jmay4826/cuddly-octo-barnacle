@@ -4,7 +4,7 @@ import { Component } from "react";
 import { StatusBar } from "./StatusBar";
 
 interface IProps {
-  student: IStudent;
+  student: IUser;
   socket: SocketIOClientStatic["Socket"];
 }
 

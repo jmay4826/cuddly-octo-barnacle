@@ -7,7 +7,7 @@ const Student = ({
   socket,
   editable
 }: {
-  student: IStudent;
+  student: IUser;
   socket: SocketIOClientStatic["Socket"];
   editable: boolean;
 }) => (

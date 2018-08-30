@@ -33,7 +33,9 @@ class Home extends Component<IProps, IState> {
     this.setState({ name });
   };
   public enterClassroom = () => {
-    this.props.history.push(this.state.classroom, { name: this.state.name });
+    this.props.history.push(this.state.classroom.toUpperCase(), {
+      name: this.state.name
+    });
   };
 
   public render() {

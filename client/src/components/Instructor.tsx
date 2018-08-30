@@ -8,7 +8,7 @@ import { EditableStudent } from "./EditableStudent";
 interface IProps extends RouteComponentProps<{ id: string }> {}
 
 interface IState {
-  students: IStudent[];
+  students: IUser[];
 }
 
 class Instructor extends Component<IProps, IState> {
@@ -21,15 +21,24 @@ class Instructor extends Component<IProps, IState> {
     this.socket = io();
     this.socket.on("connect", () => {
       this.socket.emit("join classroom", {
-        classroom: this.props.match.params.id,
+        classroom: this.props.match.params.id.toUpperCase(),
         id: this.socket.id,
         instructor: true,
         name: "Instructor"
       });
     });
-    this.socket.on("new user", (students: IStudent[]) => {
-      this.setState({ students });
-    });
+    this.socket.on(
+      "new user",
+      ({
+        students,
+        instructors
+      }: {
+        students: IUser[];
+        instructors: object[];
+      }) => {
+        this.setState({ students });
+      }
+    );
   }
   public render() {
     return (

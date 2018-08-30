@@ -2,7 +2,7 @@ import * as React from "react";
 import { Component } from "react";
 
 interface IProps {
-  student: IStudent;
+  student: IUser;
   editable: boolean;
   socket: SocketIOClientStatic["Socket"];
 }
@@ -30,6 +30,7 @@ class Name extends Component<IProps, { name: string }> {
           className={`student-name ${this.props.editable ? "editable" : ""}`}
           onChange={this.props.editable ? this.handleName : undefined}
           value={this.state.name || this.props.student.name}
+          readOnly={!this.props.editable}
         />
         {this.props.editable && (
           <button onClick={this.updateName}>Update Name</button>

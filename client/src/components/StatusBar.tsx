@@ -4,7 +4,7 @@ const isActive = (property: string | boolean, value?: string) =>
   property === value || property === true ? "student-status-active" : "";
 
 const raiseHand = (
-  student: IStudent,
+  student: IUser,
   socket: SocketIOClientStatic["Socket"]
 ) => () =>
   socket.emit("update user", {
@@ -13,7 +13,7 @@ const raiseHand = (
   });
 
 const updateStatus = (
-  student: IStudent,
+  student: IUser,
   socket: SocketIOClientStatic["Socket"],
   status: string
 ) => () => {
@@ -28,7 +28,7 @@ const StatusBar = ({
   editable,
   socket
 }: {
-  student: IStudent;
+  student: IUser;
   editable: boolean;
   socket: SocketIOClientStatic["Socket"];
 }) => (

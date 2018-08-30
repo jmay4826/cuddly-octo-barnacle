@@ -1,5 +1,11 @@
 import * as React from "react";
 
-const Instructors = () => <h2>Instructors</h2>;
+const Instructors = ({ instructors }: { instructors: IUser[] }) => (
+  <div>
+    {instructors.map(instructor => (
+      <h1 key={instructor.id}>{instructor.name}</h1>
+    ))}
+  </div>
+);
 
 export { Instructors };

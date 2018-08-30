@@ -14,15 +14,17 @@ interface IProps
 
 interface IState {
   showPoll: boolean;
-  students: IStudent[];
+  students: IUser[];
+  instructors: IUser[];
 }
 
 class Classroom extends Component<IProps, IState> {
   public socket: SocketIOClient.Socket;
-  public student: IStudent;
+  public student: IUser;
   constructor(props: IProps) {
     super(props);
     this.state = {
+      instructors: [],
       showPoll: true,
       students: []
     };
@@ -31,7 +33,7 @@ class Classroom extends Component<IProps, IState> {
     this.socket = io();
     this.socket.on("connect", () => {
       this.student = {
-        classroom: this.props.match.params.id,
+        classroom: this.props.match.params.id.toUpperCase(),
         id: this.socket.id,
         instructor: false,
         name: this.props.location.state
@@ -43,10 +45,20 @@ class Classroom extends Component<IProps, IState> {
       this.socket.emit("join classroom", this.student);
     });
 
-    this.socket.on("new user", (students: IStudent[]) => {
-      this.setState({ students });
-    });
-    this.socket.on("update user", (student: IStudent) => {
+    this.socket.on(
+      "new user",
+      ({
+        students,
+        instructors
+      }: {
+        students: IUser[];
+        instructors: IUser[];
+      }) => {
+        console.log(instructors);
+        this.setState({ students, instructors });
+      }
+    );
+    this.socket.on("update user", (student: IUser) => {
       this.student = student;
     });
   }
@@ -63,7 +75,7 @@ class Classroom extends Component<IProps, IState> {
             socket={this.socket}
           />
         )}
-        <Instructors />
+        <Instructors instructors={this.state.instructors} />
         <Students students={this.state.students} socket={this.socket} />
       </div>
     );
