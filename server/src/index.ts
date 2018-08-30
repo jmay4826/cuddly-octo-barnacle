@@ -12,7 +12,7 @@ const client = redis.createClient();
 
 interface IStudent {
   status: string;
-  classroom: string | number;
+  classroom: string;
   id: string;
   instructor: boolean;
   name: string;
@@ -47,32 +47,28 @@ const smembersAsync = promisify(client.smembers).bind(client) as (
 
 flushallAsync();
 
-const isNumeric = (value: any) => !isNaN(value - parseFloat(value));
-
-const convertDataTypes = async (input: object) => {
+const convertBooleans = async (input: Promise<{}>) => {
   const obj = await input;
 
-  const converted = Object.keys(obj).reduce(async (acc: object, key) => {
-    const accum = await acc;
-    if (isNumeric(obj[key])) {
-      return { ...accum, [key]: +obj[key] };
-    } else if (obj[key] === "false") {
-      return { ...accum, [key]: false };
-    } else if (obj[key] === "true") {
-      return { ...accum, [key]: true };
-    } else {
-      return { ...accum, [key]: obj[key] };
+  for (const key in obj) {
+    if (obj.hasOwnProperty(key)) {
+      if (obj[key] === "true") {
+        obj[key] = true;
+      } else if (obj[key] === "false") {
+        obj[key] = false;
+      }
     }
-  }, {});
+  }
 
-  return converted;
+  console.log(obj);
+  return obj;
 };
 
-const getAllUsersByClassroom = (classroom: string | number) =>
+const getAllUsersByClassroom = (classroom: string) =>
   smembersAsync(classroom).then(
     async (users: string[]) =>
       Promise.all(
-        users.map(async user => hgetallAsync(user)).map(convertDataTypes)
+        users.map(async user => hgetallAsync(user)).map(convertBooleans)
       ) as Promise<IStudent[]>
   );
 

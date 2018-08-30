@@ -19,27 +19,22 @@ const sremAsync = util_1.promisify(client.srem).bind(client);
 const saddAsync = util_1.promisify(client.sadd).bind(client);
 const smembersAsync = util_1.promisify(client.smembers).bind(client);
 flushallAsync();
-const isNumeric = (value) => !isNaN(value - parseFloat(value));
-const convertDataTypes = async (input) => {
+const convertBooleans = async (input) => {
     const obj = await input;
-    const converted = Object.keys(obj).reduce(async (acc, key) => {
-        const accum = await acc;
-        if (isNumeric(obj[key])) {
-            return Object.assign({}, accum, { [key]: +obj[key] });
+    for (const key in obj) {
+        if (obj.hasOwnProperty(key)) {
+            if (obj[key] === "true") {
+                obj[key] = true;
+            }
+            else if (obj[key] === "false") {
+                obj[key] = false;
+            }
         }
-        else if (obj[key] === "false") {
-            return Object.assign({}, accum, { [key]: false });
-        }
-        else if (obj[key] === "true") {
-            return Object.assign({}, accum, { [key]: true });
-        }
-        else {
-            return Object.assign({}, accum, { [key]: obj[key] });
-        }
-    }, {});
-    return converted;
+    }
+    console.log(obj);
+    return obj;
 };
-const getAllUsersByClassroom = (classroom) => smembersAsync(classroom).then(async (users) => Promise.all(users.map(async (user) => hgetallAsync(user)).map(convertDataTypes)));
+const getAllUsersByClassroom = (classroom) => smembersAsync(classroom).then(async (users) => Promise.all(users.map(async (user) => hgetallAsync(user)).map(convertBooleans)));
 io.on("connection", socket => {
     socket.on("join classroom", (user) => {
         socket.join(user.classroom.toString());
