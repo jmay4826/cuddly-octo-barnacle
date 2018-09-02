@@ -79,19 +79,23 @@ class Classroom extends Component<IProps, IState> {
   }
   public render() {
     return (
-      <div>
-        <h2>Classroom {this.props.match.params.id}</h2>
-        <Video />
-        <Poll />
-        {this.state.student.id && (
-          <Student
-            editable={true}
-            student={this.state.student}
-            socket={this.socket}
-          />
-        )}
-        <Instructors instructors={this.state.instructors} />
-        <Students students={this.state.otherStudents} socket={this.socket} />
+      <div className="classroom-container">
+        <div className="classroom-content">
+          <h2 className="classroom-name">{this.props.match.params.id}</h2>
+          <Video />
+          <Poll />
+        </div>
+        <div className="classroom-sidebar">
+          {this.state.student.id && (
+            <Student
+              editable={true}
+              student={this.state.student}
+              socket={this.socket}
+            />
+          )}
+          <Instructors instructors={this.state.instructors} />
+          <Students students={this.state.otherStudents} socket={this.socket} />
+        </div>
       </div>
     );
   }

@@ -5,7 +5,9 @@
   --orange: #e08e45;
   --yellow: #dbd56e;
 }
-
+* {
+  box-sizing: border-box;
+}
 body,
 html {
   margin: 0;
@@ -36,20 +38,21 @@ h4 {
   align-items: center;
 }
 
-input {
+.home-input {
   border: 5px dashed var(--orange);
 
   background: rgba(255, 255, 255, 0.8);
   /* background-color: var(--gray); */
   min-width: 30vw;
   min-height: 7vh;
+  max-width: 100%;
   font-size: 24px;
   text-align: center;
   color: black;
   outline: none;
 }
 
-button {
+.enter-classroom-button {
   background-color: rgba(255, 255, 255, 0.8);
   border-radius: 3px;
   box-shadow: 2px 2px 2px;
@@ -116,7 +119,46 @@ button {
   flex-direction: row;
 }
 
+.student-name-container {
+  display: flex;
+}
+
 .student-name {
   background: none;
-  border-bottom: 1px solid white;
+  color: var(--gray);
+  font-size: 1.5em;
+  font-weight: bold;
+  max-width: 100%;
+
+  /* min-width: 100%; */
+  border: none;
+}
+
+.update-name-button {
+  opacity: 0;
+  transition: opacity 300ms;
+}
+.update-name-button.active {
+  opacity: 1;
+}
+
+.classroom-container {
+  display: flex;
+}
+.classroom-content {
+  flex-basis: 80vw;
+}
+.classroom-sidebar {
+  flex-basis: 20vw;
+}
+
+.classroom-name {
+  text-align: center;
+}
+
+.dummy-video {
+  height: 505px;
+  width: 95%;
+  background-color: black;
+  border: 1px solid white;
 }

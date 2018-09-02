@@ -3,7 +3,7 @@ import { Component } from "react";
 import { RouteComponentProps } from "react-router";
 import * as io from "socket.io-client";
 
-import { EditableStudent } from "./EditableStudent";
+import { Student } from "./Student";
 
 interface IProps extends RouteComponentProps<{ id: string }> {}
 
@@ -46,7 +46,7 @@ class Instructor extends Component<IProps, IState> {
       <div>
         <h2>Instructor View</h2>
         {this.state.students.map(student => (
-          <EditableStudent student={student} socket={this.socket} />
+          <Student editable={true} student={student} socket={this.socket} />
         ))}
       </div>
     );

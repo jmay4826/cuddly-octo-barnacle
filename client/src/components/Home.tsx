@@ -43,16 +43,23 @@ class Home extends Component<IProps, IState> {
       <div className="enter-classroom-container">
         <h2>Join a Classroom</h2>
         <input
+          className="home-input"
           placeholder="Classroom ID"
           onChange={this.updateClassroom}
           value={this.state.classroom}
         />
         <input
+          className="home-input"
           placeholder="Your Name"
           onChange={this.updateName}
           value={this.state.name}
         />
-        <button onClick={this.enterClassroom}>Go</button>
+        <button
+          className="enter-classroom-button"
+          onClick={this.enterClassroom}
+        >
+          Go
+        </button>
       </div>
     );
   }

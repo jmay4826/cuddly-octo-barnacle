@@ -1,5 +1,5 @@
 import * as React from "react";
 
-const Video = () => <h2>Video</h2>;
+const Video = () => <div className="dummy-video" />;
 
 export { Video };

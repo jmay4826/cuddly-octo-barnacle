@@ -2,8 +2,9 @@ import * as React from "react";
 
 const Instructors = ({ instructors }: { instructors: IUser[] }) => (
   <div>
+    <h1>Instructors</h1>
     {instructors.map(instructor => (
-      <h1 key={instructor.id}>{instructor.name}</h1>
+      <h3 key={instructor.id}>{instructor.name}</h3>
     ))}
   </div>
 );
