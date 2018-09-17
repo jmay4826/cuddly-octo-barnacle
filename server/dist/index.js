@@ -10,32 +10,6 @@ const app = express();
 const http = new http_1.Server(app);
 const io = socketIO(http);
 const client = handy_redis_1.createHandyClient();
-// const flushallAsync = promisify(client.flushall).bind(client) as () => Promise<
-//   string
-// >;
-// const hgetallAsync = promisify(client.hgetall).bind(client) as (
-//   key: string
-// ) => Promise<{ [key: string]: string }>;
-// const hmsetAsync = promisify(client.hmset).bind(client) as (
-//   hash: string | number,
-//   values: object
-// ) => Promise<boolean>;
-// const hgetAsync = promisify(client.hget).bind(client) as (
-//   key: string,
-//   field: string
-// ) => Promise<string>;
-// const sremAsync = promisify(client.srem).bind(client) as (
-//   hash: string,
-//   ...values: string[]
-// ) => Promise<number>;
-// const saddAsync = promisify(client.sadd).bind(client) as (
-//   key: string | number,
-//   ...members: string[]
-// ) => Promise<number>;
-// const smembersAsync = promisify(client.smembers).bind(client) as (
-//   key: string | number
-// ) => Promise<string[]>;
-// flushallAsync();
 client.flushall();
 const filterUsers = (users) => {
     const students = users.filter(({ instructor }) => !instructor);
